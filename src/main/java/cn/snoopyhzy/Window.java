@@ -7,11 +7,11 @@ import com.alibaba.druid.util.JdbcConstants;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +23,19 @@ import java.util.Map;
  * @create: 2019-11-24 04:40
  */
 public class Window {
-    private static final boolean IS_ENGLISH=true;
-    private static final String JFRAME_TITLE = IS_ENGLISH?"Druid SQL AST GUI":"Druid SQL AST 生成展现小工具";
-    private static final String CHOOSE_DATABASE = IS_ENGLISH?"Choose Database:":"数据库选择：";
-    private static final String DO_SQL_PARSE = IS_ENGLISH?"Parse SQL":"执行SQL解析";
-    private static final String PARSE_ERROR = IS_ENGLISH?"Parse Failed":"语法解析失败";
+    private static final boolean IS_ENGLISH = true;
+    private static final String JFRAME_TITLE = IS_ENGLISH ? "Druid SQL AST GUI" : "Druid SQL AST 生成展现小工具";
+    private static final String CHOOSE_DATABASE = IS_ENGLISH ? "Choose Database:" : "数据库选择：";
+    private static final String DO_SQL_PARSE = IS_ENGLISH ? "Parse SQL" : "执行SQL解析";
+    private static final String PARSE_ERROR = IS_ENGLISH ? "Parse Failed" : "语法解析失败";
     private static final String DEMO_SQL = "select 'this is a mysql demo' from dual where 1<=>2";
-    private static final String TREE_ROOT_STRING = IS_ENGLISH?"Use %s Engine,Please double click Folder to view SQL AST"
-                                                   :"使用%s语法解析，解析后SQL语句列表请双击展开";
-    private static final String LIST_ELEMENT_STRING =IS_ENGLISH?"Element ":"元素";
-    private static final String TEXT_IN_TREE_NODE = IS_ENGLISH?"Name:%s,Class:%s，Content:%s":"名称：%s，类型：%s，对象内容：%s";
-    private static final String SQL_STATEMENT_STRING=IS_ENGLISH?"SQL Staement ":"SQL语句";
+    private static final String TREE_ROOT_STRING = IS_ENGLISH ? "Use %s Engine,Please double click Folder to view SQL AST"
+            : "使用%s语法解析，解析后SQL语句列表请双击展开";
+    private static final String LIST_ELEMENT_STRING = IS_ENGLISH ? "Element " : "元素";
+    private static final String TEXT_IN_TREE_NODE = IS_ENGLISH ? "Name:%s,Class:%s,Content:%s" : "名称：%s，类型：%s，对象内容：%s";
+    private static final String SQL_STATEMENT_STRING = IS_ENGLISH ? "SQL Staement " : "SQL语句";
+    private static final String SEARCH_TREE_STR = IS_ENGLISH ? "Search AST Tree:" : "搜索AST抽象语法树：";
+    private static final String SEARCH_STRING = IS_ENGLISH ? "Search" : "搜索";
 
     public Window(String sql, JTree jtree) {
 
@@ -49,14 +51,34 @@ public class Window {
         jSplitPane.setDividerLocation(400);
 
         //语法树展示的面板在最中间
+        JPanel centerPanel = new JPanel();
+        BorderLayout centerPanelLayout = new BorderLayout();
+        centerPanel.setLayout(centerPanelLayout);
+        //搜索语法树的菜单
+        JPanel searchPanel = new JPanel();
+        JLabel searchLabel = new JLabel(SEARCH_TREE_STR);
+        JButton searchButton = new JButton(SEARCH_STRING);
+        JTextField searchField = new JTextField(20);
+        searchPanel.add(searchLabel);
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
+        centerPanel.add(searchPanel, BorderLayout.NORTH);
+
+
+        //树在中间
         JScrollPane jScrollPane1 = new JScrollPane();
-        JTree jTree1 = new JTree();
+        centerPanel.add(jScrollPane1, BorderLayout.CENTER);
 
         //jFrame.setLayout(new BorderLayout());
         jScrollPane1.getViewport().add(jtree, null);
-        //jFrame.add(jScrollPane1, BorderLayout.CENTER);
-        jSplitPane.setRightComponent(jScrollPane1);
+        //jFrame.add(centerPanel, BorderLayout.CENTER);
+        jSplitPane.setRightComponent(centerPanel);
 
+        //SEARCH EVENT
+        searchButton.addActionListener((e) -> {
+            JTree tree = (JTree) jScrollPane1.getViewport().getComponent(0);
+            visitAllNodeAndSelect(tree,(DefaultMutableTreeNode) jtree.getModel().getRoot(), searchField.getText());
+        });
 
         //左边的总panel
         JPanel westPanel = new JPanel();
@@ -96,25 +118,40 @@ public class Window {
         JButton doParserButton = new JButton(DO_SQL_PARSE);
         westPanel.add(doParserButton, BorderLayout.SOUTH);
 
-        doParserButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    jtree.setModel(new DefaultTreeModel(parseSQLtoTree(textArea.getText(), (String) databaseBox.getSelectedItem()), false));
-                } catch (Exception ex) {
-                    DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(PARSE_ERROR);
-                    dmtn.add(new DefaultMutableTreeNode(ex.toString()));
-                    jtree.setModel(new DefaultTreeModel(dmtn, false));
+        doParserButton.addActionListener((e) -> {
+            try {
+                jtree.setModel(new DefaultTreeModel(parseSQLtoTree(textArea.getText(), (String) databaseBox.getSelectedItem()), false));
+            } catch (Exception ex) {
+                DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(PARSE_ERROR);
+                dmtn.add(new DefaultMutableTreeNode(ex.toString()));
+                jtree.setModel(new DefaultTreeModel(dmtn, false));
 
-                }
-                jtree.repaint();
             }
+            jtree.repaint();
         });
         //jFrame.add(westPanel, BorderLayout.WEST);
         jSplitPane.setLeftComponent(westPanel);
         jFrame.add(jSplitPane);
 
         jFrame.setVisible(true);
+    }
+
+    private void visitAllNodeAndSelect(JTree tree, DefaultMutableTreeNode node, String text) {
+        Enumeration<?> children = node.children();
+        while (children.hasMoreElements()) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
+            TreePath path = new TreePath(child.getPath());
+            String str=child.getUserObject().toString();
+            if (!"".equals(text.trim())&&str.contains(text)) {
+                tree.addSelectionPath(path);
+                if (!child.isLeaf()) {
+                    tree.expandPath(path);
+                }
+            }else{
+                tree.removeSelectionPath(path);
+            }
+            visitAllNodeAndSelect(tree, child, text);
+        }
     }
 
     public static void main(String[] args) {
@@ -125,7 +162,7 @@ public class Window {
 
     public static DefaultMutableTreeNode parseSQLtoTree(String sql, String dbType) {
         List<SQLStatement> statementList = SQLUtils.parseStatements(sql, dbType);
-        DefaultMutableTreeNode defaultMutableTreeNode = new DefaultMutableTreeNode(String.format(TREE_ROOT_STRING,dbType));
+        DefaultMutableTreeNode defaultMutableTreeNode = new DefaultMutableTreeNode(String.format(TREE_ROOT_STRING, dbType));
         JTree treeRoot = new JTree(defaultMutableTreeNode);
         int i = 0;
         for (SQLStatement statement : statementList) {
@@ -213,7 +250,7 @@ public class Window {
 
         @Override
         public String toString() {
-            return String.format(TEXT_IN_TREE_NODE,name,object.getClass(),object.toString());
+            return String.format(TEXT_IN_TREE_NODE, name, object.getClass(), object.toString());
         }
     }
 
