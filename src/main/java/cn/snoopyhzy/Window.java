@@ -9,6 +9,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -22,7 +24,7 @@ import java.util.List;
  */
 public class Window {
     private static final boolean IS_ENGLISH = true;
-    private static final String JFRAME_TITLE = IS_ENGLISH ? "Druid SQL AST GUI" : "Druid SQL AST 生成展现小工具";
+    private static final String JFRAME_TITLE = IS_ENGLISH ? "Druid SQL AST GUI base on Druid %s" : "Druid SQL AST 生成展现小工具 基于Druid %s";
     private static final String CHOOSE_DATABASE = IS_ENGLISH ? "Choose Database:" : "数据库选择：";
     private static final String DO_SQL_PARSE = IS_ENGLISH ? "Parse SQL" : "执行SQL解析";
     private static final String PARSE_ERROR = IS_ENGLISH ? "Parse Failed" : "语法解析失败";
@@ -38,7 +40,7 @@ public class Window {
     public Window(String sql, JTree jtree) {
 
         JFrame jFrame = new JFrame();
-        jFrame.setTitle(JFRAME_TITLE);
+        jFrame.setTitle(String.format(JFRAME_TITLE,getDruidVersion()));
         jFrame.setBounds(10, 1, 1200, 800);//x,y坐标 和大小
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //中间可以用鼠标拖动的panel
@@ -234,6 +236,19 @@ public class Window {
         );
 
         return treeNode;
+    }
+
+    private static String getDruidVersion(){
+        String version="";
+        Properties prop = new Properties();
+        try (InputStream input=Window.class.getResourceAsStream("/META-INF/MANIFEST.MF")){
+            prop.load(input);
+            return prop.getProperty("Druid-Version","");
+            //https://stackoverflow.com/questions/58236241/openjdk-11-0-4-has-java-atk-wrapper-jar-in-the-classpath
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return version;
     }
 
     private static class TreeObject {

@@ -4,6 +4,11 @@ Druid SQL AST GUI (java swing)
 
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)   
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+# Introduction
+- https://github.com/snoopyhzy/druid-sql-ast-gui.git
+- cd druid-sql-ast-gui && mvn package
+- java -jar target/druid-sql-ast-gui-1.0-SNAPSHOT.jar
+- have fun.
 # SCREEN SHOT
 ![SCREEN SHOT](GUI.png)
 ----
