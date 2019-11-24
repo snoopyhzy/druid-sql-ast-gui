@@ -11,10 +11,8 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @program: druid sql ast gui
@@ -180,6 +178,13 @@ public class Window {
             int i = 0;
             for (Object objInList : (List) object) {
                 treeNode.add(buildMutableTree(new TreeObject(LIST_ELEMENT_STRING + (i++), objInList)));
+            }
+        }
+        if(object instanceof Map) {
+            Set<Map.Entry<?,?>> entrySet=((Map) object).entrySet();
+            for(Map.Entry entry:entrySet)
+            {
+                treeNode.add(buildMutableTree(new TreeObject(entry.getKey().toString(), entry.getValue())));
             }
         }
         if (!objClass.getTypeName().startsWith("com.alibaba.druid")) {
