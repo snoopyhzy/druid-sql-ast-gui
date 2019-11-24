@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cn.snoopyhzy</groupId>
+    <artifactId>druid-sql-ast-gui</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>druid-sql-ast-gui</name>
+    <url>http://www.huzhaoyun.cn</url>
+    <description>Druid SQL AST GUI by Java Swing
+        Druid SQL AST 语法树 图形展现小工具</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <jdk.version>1.8</jdk.version>
+        <druid.version>1.1.21</druid.version>
+    </properties>
+
+    <developers>
+        <developer>
+            <id>snoopyhzy</id>
+            <name>Zhaoyun Hu</name>
+            <email>snoopyhzy@hotmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/snoopyhzy/druid-sql-ast-gui.git</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+        <license>
+            <name>Anti 996</name>
+            <url>https://github.com/996icu/996.ICU/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+            <comments>A "996" work schedule refers to an unofficial work schedule (9a.m. ~ 9p.m., 6 days a week) that has been gaining in popularity. Serving a company that encourages the "996" work schedule usually means working for at least 60 hours a week.</comments>
+        </license>
+    </licenses>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>${druid.version}</version>
+        </dependency>
+    </dependencies>
+</project>
