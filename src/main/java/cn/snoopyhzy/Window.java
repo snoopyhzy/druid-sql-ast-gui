@@ -23,7 +23,7 @@ import java.util.List;
  * @create: 2019-11-24 04:40
  */
 public class Window {
-    private static final boolean IS_ENGLISH = true;
+    private static final boolean IS_ENGLISH = false;
     private static final String JFRAME_TITLE = IS_ENGLISH ? "Druid SQL AST GUI base on Druid %s" : "Druid SQL AST 生成展现小工具 基于Druid %s";
     private static final String CHOOSE_DATABASE = IS_ENGLISH ? "Choose Database:" : "数据库选择：";
     private static final String DO_SQL_PARSE = IS_ENGLISH ? "Parse SQL" : "执行SQL解析";
@@ -37,10 +37,10 @@ public class Window {
     private static final String SEARCH_TREE_STR = IS_ENGLISH ? "Search AST Tree:" : "搜索AST抽象语法树：";
     private static final String SEARCH_STRING = IS_ENGLISH ? "Search" : "搜索";
 
-    public Window(String sql, JTree jtree) {
+    private Window(String sql, JTree jtree) {
 
         JFrame jFrame = new JFrame();
-        jFrame.setTitle(String.format(JFRAME_TITLE,getDruidVersion()));
+        jFrame.setTitle(String.format(JFRAME_TITLE, getDruidVersion()));
         jFrame.setBounds(10, 1, 1200, 800);//x,y坐标 和大小
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //中间可以用鼠标拖动的panel
@@ -69,15 +69,13 @@ public class Window {
         JScrollPane jScrollPane1 = new JScrollPane();
         centerPanel.add(jScrollPane1, BorderLayout.CENTER);
 
-        //jFrame.setLayout(new BorderLayout());
         jScrollPane1.getViewport().add(jtree, null);
-        //jFrame.add(centerPanel, BorderLayout.CENTER);
         jSplitPane.setRightComponent(centerPanel);
 
         //SEARCH EVENT
-        searchButton.addActionListener((e) -> {
+        searchButton.addActionListener(e -> {
             JTree tree = (JTree) jScrollPane1.getViewport().getComponent(0);
-            visitAllNodeAndSelect(tree,(DefaultMutableTreeNode) jtree.getModel().getRoot(), searchField.getText());
+            visitAllNodeAndSelect(tree, (DefaultMutableTreeNode) jtree.getModel().getRoot(), searchField.getText());
         });
 
         //左边的总panel
@@ -87,7 +85,7 @@ public class Window {
         JLabel databaseLabel = new JLabel(CHOOSE_DATABASE);
         JPanel databasePanel = new JPanel();
         databasePanel.add(databaseLabel);
-        JComboBox databaseBox = new JComboBox();
+        JComboBox<String> databaseBox = new JComboBox<>();
         databaseBox.addItem(JdbcConstants.ORACLE);
         databaseBox.addItem(JdbcConstants.MYSQL);
         databaseBox.addItem(JdbcConstants.HIVE);
@@ -99,26 +97,25 @@ public class Window {
         databaseBox.addItem(JdbcConstants.ODPS);
         databaseBox.addItem(JdbcConstants.PHOENIX);
         databaseBox.addItem(JdbcConstants.ELASTIC_SEARCH);
-
+        databaseBox.addItem("Other");
         databasePanel.add(databaseBox);
 
         westPanel.setLayout(borderLayout);
         westPanel.add(databasePanel, BorderLayout.NORTH);
-        //borderLayout.addLayoutComponent(databasePanel,BorderLayout.NORTH);
         //文本框在滚动区域
         JTextArea textArea = new JTextArea(null, sql, 5, 40);
         textArea.setLineWrap(true);
         JScrollPane jScrollPane = new JScrollPane(textArea);
         jScrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         westPanel.add(jScrollPane, BorderLayout.CENTER);
 
         //执行SQL按钮
         JButton doParserButton = new JButton(DO_SQL_PARSE);
         westPanel.add(doParserButton, BorderLayout.SOUTH);
 
-        doParserButton.addActionListener((e) -> {
+        doParserButton.addActionListener(e -> {
             try {
                 jtree.setModel(new DefaultTreeModel(parseSQLtoTree(textArea.getText(), (String) databaseBox.getSelectedItem()), false));
             } catch (Exception ex) {
@@ -129,7 +126,6 @@ public class Window {
             }
             jtree.repaint();
         });
-        //jFrame.add(westPanel, BorderLayout.WEST);
         jSplitPane.setLeftComponent(westPanel);
         jFrame.add(jSplitPane);
 
@@ -141,13 +137,13 @@ public class Window {
         while (children.hasMoreElements()) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
             TreePath path = new TreePath(child.getPath());
-            String str=child.getUserObject().toString();
-            if (!"".equals(text.trim())&&str.contains(text)) {
+            String str = child.getUserObject().toString();
+            if (!"".equals(text.trim()) && str.contains(text)) {
                 tree.addSelectionPath(path);
                 if (!child.isLeaf()) {
                     tree.expandPath(path);
                 }
-            }else{
+            } else {
                 tree.removeSelectionPath(path);
             }
             visitAllNodeAndSelect(tree, child, text);
@@ -156,14 +152,13 @@ public class Window {
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
-        JTree itree = new JTree(parseSQLtoTree(DEMO_SQL, dbType));
-        new Window(DEMO_SQL, itree);
+        JTree jTree = new JTree(parseSQLtoTree(DEMO_SQL, dbType));
+        new Window(DEMO_SQL, jTree);
     }
 
-    public static DefaultMutableTreeNode parseSQLtoTree(String sql, String dbType) {
+    private static DefaultMutableTreeNode parseSQLtoTree(String sql, String dbType) {
         List<SQLStatement> statementList = SQLUtils.parseStatements(sql, dbType);
         DefaultMutableTreeNode defaultMutableTreeNode = new DefaultMutableTreeNode(String.format(TREE_ROOT_STRING, dbType));
-        JTree treeRoot = new JTree(defaultMutableTreeNode);
         int i = 0;
         for (SQLStatement statement : statementList) {
             defaultMutableTreeNode.add(buildMutableTree(new TreeObject(SQL_STATEMENT_STRING + (++i), statement)));
@@ -171,7 +166,8 @@ public class Window {
         return defaultMutableTreeNode;
     }
 
-    public static DefaultMutableTreeNode buildMutableTree(TreeObject treeObject) {
+
+    private static DefaultMutableTreeNode buildMutableTree(TreeObject treeObject) {
         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(treeObject);
         Object object = treeObject.getObject();
         Class<?> objClass = object.getClass();
@@ -182,23 +178,20 @@ public class Window {
                 treeNode.add(buildMutableTree(new TreeObject(LIST_ELEMENT_STRING + (i++), objInList)));
             }
         }
-        if(object instanceof Map) {
-            Set<Map.Entry<?,?>> entrySet=((Map) object).entrySet();
-            for(Map.Entry entry:entrySet)
-            {
+        if (object instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Set<Map.Entry<?, ?>> entrySet = ((Map) object).entrySet();
+            for (Map.Entry entry : entrySet) {
                 treeNode.add(buildMutableTree(new TreeObject(entry.getKey().toString(), entry.getValue())));
             }
         }
         if (!objClass.getTypeName().startsWith("com.alibaba.druid")) {
             return treeNode;
         }
-        //System.out.println(objClass.getName());
         Map<String, Method> methodMap = new LinkedHashMap<>();
         for (Method method : objClass.getMethods()) {
             String methodName = method.getName();
-            //System.out.println("1----" + methodName);
-            if (method.getParameterCount() > 0 || "getParent".equals(methodName) || "getClass".equals(methodName)) {
-                //System.out.println("2----" + methodName);
+            if (method.getParameterCount() > 0 || "getClass".equals(methodName)) {
                 continue;
             }
             String fieldName = null;
@@ -213,8 +206,17 @@ public class Window {
             } else {
                 continue;
             }
-            methodMap.put(fieldName, method);
+            //support show getParent but only itself.
+            if ("getParent".equals(methodName)) {
+                try {
+                    treeNode.add(new DefaultMutableTreeNode(new TreeObject(fieldName, method.invoke(object))));
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+                continue;
+            }
 
+            methodMap.put(fieldName, method);
         }
         //排序处理
         methodMap.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(
@@ -222,14 +224,9 @@ public class Window {
                     try {
                         Object obj;
                         if ((obj = entry.getValue().invoke(object)) != null) {
-                            //System.out.println("buidTree");
                             treeNode.add(buildMutableTree(new TreeObject(entry.getKey(), obj)));
                         }
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedOperationException e) {
+                    } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }
@@ -238,12 +235,12 @@ public class Window {
         return treeNode;
     }
 
-    private static String getDruidVersion(){
-        String version="";
+    private static String getDruidVersion() {
+        String version = "";
         Properties prop = new Properties();
-        try (InputStream input=Window.class.getResourceAsStream("/META-INF/MANIFEST.MF")){
+        try (InputStream input = Window.class.getResourceAsStream("/META-INF/MANIFEST.MF")) {
             prop.load(input);
-            return prop.getProperty("Druid-Version","");
+            return prop.getProperty("Druid-Version", "");
             //https://stackoverflow.com/questions/58236241/openjdk-11-0-4-has-java-atk-wrapper-jar-in-the-classpath
         } catch (IOException e) {
             e.printStackTrace();
@@ -260,17 +257,14 @@ public class Window {
             this.object = object;
         }
 
-        public String getName() {
-            return name;
-        }
-
         public Object getObject() {
             return object;
         }
 
         @Override
         public String toString() {
-            return String.format(TEXT_IN_TREE_NODE, name, object.getClass(), object.toString());
+            return String.format(TEXT_IN_TREE_NODE, name, object == null ? "null" : object.getClass(),
+                    object == null ? "null" : object.toString());
         }
     }
 
