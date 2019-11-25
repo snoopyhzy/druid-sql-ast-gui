@@ -2,6 +2,7 @@
 Druid SQL AST 语法树展现小工具  
 Druid SQL AST GUI (java swing)  
 
+[![Build Status](https://travis-ci.org/snoopyhzy/druid-sql-ast-gui.svg?branch=master)](https://travis-ci.org/snoopyhzy/druid-sql-ast-gui)  
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)   
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 # Introduction
